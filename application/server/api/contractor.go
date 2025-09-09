@@ -21,11 +21,11 @@ func NewContractorHandler() *ContractorHandler {
 // CreateCT 生成交易（仅交易平台组织可以调用）
 func (h *ContractorHandler) CreateCT(c *gin.Context) {
 	var req struct {
-		ContractID    string `json:"ContractID"`    // 合约ID
-		REID         string `json:"RealestateID"` // 房产ID
-		DeveloperID  string `json:"DeveloperID"`  // 开发商ID
-		ContractorID string `json:"ContractorID"` // 承包商ID
-		Payment float64 `json:"Payment"`        // 总工资
+		ContractID   string  `json:"ContractID"`   // 合约ID
+		REID         string  `json:"RealestateID"` // 房产ID
+		DeveloperID  string  `json:"DeveloperID"`  // 开发商ID
+		ContractorID string  `json:"ContractorID"` // 承包商ID
+		Payment      float64 `json:"Payment"`      // 总工资
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -42,9 +42,21 @@ func (h *ContractorHandler) CreateCT(c *gin.Context) {
 	utils.SuccessWithMessage(c, "交易创建成功", nil)
 }
 
+// SubmitCompletion 提交确认请求
+func (h *ContractorHandler) SubmitCompletion(c *gin.Context) {
+	ctID := c.Param("id")
+	err := h.contractorService.SubmitCompletion(ctID)
+	if err != nil {
+		utils.ServerError(c, " 提交确认请求失败："+err.Error())
+		return
+	}
+
+	utils.SuccessWithMessage(c, "提交确认请求成功", nil)
+}
+
 // QueryRE 查询房产信息
 func (h *ContractorHandler) QueryRE(c *gin.Context) {
-	reID := c.Param("reID")
+	reID := c.Param("id")
 	realEstate, err := h.contractorService.QueryRE(reID)
 	if err != nil {
 		utils.ServerError(c, "查询房产信息失败："+err.Error())
@@ -56,7 +68,7 @@ func (h *ContractorHandler) QueryRE(c *gin.Context) {
 
 // QueryCT 查询交易信息
 func (h *ContractorHandler) QueryCT(c *gin.Context) {
-	ctID := c.Param("ctID")
+	ctID := c.Param("id")
 	transaction, err := h.contractorService.QueryCT(ctID)
 	if err != nil {
 		utils.ServerError(c, "查询交易信息失败："+err.Error())

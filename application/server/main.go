@@ -11,6 +11,7 @@ import (
 )
 
 func main() {
+	log.Println("开始进行Hyperelaty服务器配置")
 	// 初始化配置
 	if err := config.InitConfig(); err != nil {
 		log.Fatalf("初始化配置失败：%v", err)
@@ -18,7 +19,7 @@ func main() {
 
 	// 初始化 Fabric 客户端
 	if err := fabric.InitFabric(); err != nil {
-		log.Fatalf("初始化Fabric客户端失败：%v", err)
+		log.Fatalf("初始化客户端失败：%v", err)
 	}
 
 	// 创建 Gin 路由
@@ -47,10 +48,12 @@ func main() {
 	{
 		// 生成交易
 		contractor.POST("/contract/create", contractorHandler.CreateCT)
+		// 提交确认请求
+		contractor.POST("/contract/submit/:id", contractorHandler.SubmitCompletion)
 		// 查询房产接口
 		contractor.GET("/realestate/:id", contractorHandler.QueryRE)
 		// 查询交易接口
-		contractor.GET("/contract/:ctID", contractorHandler.QueryCT)
+		contractor.GET("/contract/:id", contractorHandler.QueryCT)
 		contractor.GET("/contract/list", contractorHandler.PageCT)
 		// 查询区块接口
 		contractor.GET("/block/list", contractorHandler.QueryBlockList)
@@ -59,9 +62,9 @@ func main() {
 	supervisor := apiGroup.Group("/supervisor")
 	{
 		// 完成交易
-		supervisor.POST("/contract/complete/:ctID", supervisorHandler.Authenticate)
+		supervisor.POST("/contract/complete/:id", supervisorHandler.Authenticate)
 		// 查询交易接口
-		supervisor.GET("/contract/:ctID", supervisorHandler.QueryCT)
+		supervisor.GET("/contract/:id", supervisorHandler.QueryCT)
 		supervisor.GET("/contract/list", supervisorHandler.PageCT)
 		// 查询区块接口
 		supervisor.GET("/block/list", supervisorHandler.QueryBlockList)
@@ -72,4 +75,5 @@ func main() {
 	if err := r.Run(addr); err != nil {
 		log.Fatalf("启动服务器失败：%v", err)
 	}
+	log.Println("服务器启动成功")
 }

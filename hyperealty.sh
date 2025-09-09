@@ -17,15 +17,14 @@ function prepare(){
 
 # 部署服务
 function setService(){
-    cd application
     if [ ! -f "docker-compose.yml" ]; then
         fatalln "application/docker-compose.yml 文件不存在！"
-        infoln"执行 docker-compose up -d..."
+        infoln "执行 docker-compose up -d..."
         docker-compose up -d
         ERR "应用服务启动失败！"
         successln "应用服务启动完成"
     fi
-    log_info "检查服务状态..."
+    infoln "检查服务状态..."
     sleep 5
     if [ "$(docker-compose ps -q | wc -l)" -gt 0 ]; then
         successln "所有服务已成功启动"
@@ -39,9 +38,11 @@ function setService(){
 function hyperealtyUp(){
     warnln "开始部署Hyperealty项目"
     infoln "1. 开始部署Hyperealty Network"
-    ./network/network.sh up
+    cd network
+    ./network.sh up
     ERR "网络部署失败"
     infoln "2. 开始部署Hyperealty服务器"
+    cd ../application
     setService
     ERR "服务部署失败"
     successln "服务部署成功，访问http://localhost:8000以使用"

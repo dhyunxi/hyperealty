@@ -104,7 +104,7 @@ func (s *SmartContract) putState(ctx contractapi.TransactionContextInterface, ke
 
 	err = ctx.GetStub().PutState(key, jsonSet)
 	if err != nil {
-		return fmt.Errorf("failed to putstate: %v", err)
+		return fmt.Errorf("failed to putstate(key: %s): %v", key, err)
 	}
 	return nil
 }
@@ -236,16 +236,13 @@ func (s *SmartContract) CreateCT(ctx contractapi.TransactionContextInterface, ct
 
 	// 查询房产
 	var re Realestate
-	reKey, err := s.createCompositeKey(ctx, RE, []string{string(re.REStatus), reID})
-	err = s.getState(ctx, reKey, &re) // 将查询得到的房产解析到 re 中
+	reKey, err := s.createCompositeKey(ctx, RE, []string{PENDING, reID})
 	if err != nil {
 		return err
 	}
-	if re.REStatus == CONSTRUCTING {
-		return fmt.Errorf("Realestate is under construction")
-	}
-	if re.REStatus == COMPLETED {
-		return fmt.Errorf("Realestate is completed")
+	err = s.getState(ctx, reKey, &re) // 将查询得到的房产解析到 re 中
+	if err != nil {
+		return err
 	}
 
 	// 生成交易信息
@@ -261,6 +258,14 @@ func (s *SmartContract) CreateCT(ctx contractapi.TransactionContextInterface, ct
 	}
 
 	// 更新房产状态
+	err = s.DeleteAsset(ctx, reKey)
+	if err != nil {
+		return err
+	}
+	reKey, err = s.createCompositeKey(ctx, RE, []string{CONSTRUCTING, reID})
+	if err != nil {
+		return err
+	}
 	re.REStatus = CONSTRUCTING
 	re.UpdateTime = CreateTime
 	err = s.putState(ctx, reKey, re)
@@ -278,7 +283,7 @@ func (s *SmartContract) CreateCT(ctx contractapi.TransactionContextInterface, ct
 }
 
 // ! 发起交易完成请求
-func (s *SmartContract) SubmitCompletion(ctx contractapi.TransactionContextInterface, ctID string) error {
+func (s *SmartContract) SubmitCompletion(ctx contractapi.TransactionContextInterface, ctID string, updateTime time.Time) error {
 	// 身份认证
 	CID, err := s.getCID(ctx)
 	if err != nil {
@@ -300,11 +305,17 @@ func (s *SmartContract) SubmitCompletion(ctx contractapi.TransactionContextInter
 	}
 
 	// 修改状态
-	status := ct.CTStatus
-	if status != CONSTRUCTING {
-		return fmt.Errorf("Invalid Contract")
-	}
+	// 注意应该创建新CT，而不是覆盖旧CT，因为复合键包含状态
 	ct.CTStatus = EVALUATING
+	ct.UpdateTime = updateTime
+	err = s.DeleteAsset(ctx, ctKey)
+	if err != nil {
+		return err
+	}
+	ctKey, err = s.createCompositeKey(ctx, CT, []string{EVALUATING, ctID})
+	if err != nil {
+		return err
+	}
 	err = s.putState(ctx, ctKey, ct)
 	return err
 }
@@ -322,7 +333,7 @@ func (s *SmartContract) Authenticate(ctx contractapi.TransactionContextInterface
 
 	// 查询交易
 	var ct Contract
-	ctKey, err := s.createCompositeKey(ctx, CT, []string{CONSTRUCTING, ctID})
+	ctKey, err := s.createCompositeKey(ctx, CT, []string{EVALUATING, ctID})
 	if err != nil {
 		return err
 	}
@@ -331,14 +342,22 @@ func (s *SmartContract) Authenticate(ctx contractapi.TransactionContextInterface
 		return err
 	}
 
-	// 验证状态
-	if ct.CTStatus != EVALUATING {
-		return fmt.Errorf("Invalid Contract")
-	}
 	// 修改合约状态为完成，修改更新时间
+	err = s.DeleteAsset(ctx, ctKey)
+	if err != nil {
+		return err
+	}
+	ctKey, err = s.createCompositeKey(ctx, CT, []string{COMPLETED, ctID})
+	if err != nil {
+		return err
+	}
 	ct.CTStatus = COMPLETED
 	ct.UpdateTime = updateTime
 	err = s.putState(ctx, ctKey, ct)
+	if err != nil {
+		return err
+	}
+
 	// 获取对应房产
 	reid := ct.REID
 	reKey, err := s.createCompositeKey(ctx, RE, []string{CONSTRUCTING, reid})
@@ -351,8 +370,16 @@ func (s *SmartContract) Authenticate(ctx contractapi.TransactionContextInterface
 		return err
 	}
 	// 修改对应房产状态为完成
+	err = s.DeleteAsset(ctx, reKey)
+	if err != nil {
+		return err
+	}
 	re.REStatus = COMPLETED
 	re.UpdateTime = updateTime
+	reKey, err = s.createCompositeKey(ctx, RE, []string{COMPLETED, reid})
+	if err != nil {
+		return err
+	}
 	err = s.putState(ctx, reKey, re)
 	return err
 }
@@ -370,10 +397,9 @@ func (s *SmartContract) QueryRE(ctx contractapi.TransactionContextInterface, id 
 
 		var re Realestate
 		err = s.getState(ctx, key, &re)
-		if err != nil {
-			return nil, err
+		if err == nil {
+			return &re, nil
 		}
-		return &re, nil
 	}
 	return nil, fmt.Errorf("ID %s not exist", id)
 }
@@ -388,10 +414,9 @@ func (s *SmartContract) QueryCT(ctx contractapi.TransactionContextInterface, id 
 
 		var ct Contract
 		err = s.getState(ctx, key, &ct)
-		if err != nil {
-			return nil, err
+		if err == nil {
+			return &ct, nil
 		}
-		return &ct, nil
 	}
 	return nil, fmt.Errorf("ID %s not exist", id)
 }

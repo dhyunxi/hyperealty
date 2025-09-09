@@ -20,7 +20,7 @@ func NewSupervisorHandler() *SupervisorHandler {
 
 // 确认交易完成
 func (h *SupervisorHandler) Authenticate(c *gin.Context) {
-	ctID := c.Param("ctID")
+	ctID := c.Param("id")
 	err := h.supervisorService.Authenticate(ctID)
 	if err != nil {
 		utils.ServerError(c, "完成交易失败："+err.Error())
@@ -32,7 +32,7 @@ func (h *SupervisorHandler) Authenticate(c *gin.Context) {
 
 // QueryCT 查询交易信息
 func (h *SupervisorHandler) QueryCT(c *gin.Context) {
-	ctID := c.Param("ctID")
+	ctID := c.Param("id")
 	transaction, err := h.supervisorService.QueryCT(ctID)
 	if err != nil {
 		utils.ServerError(c, "查询交易信息失败："+err.Error())

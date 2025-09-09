@@ -22,6 +22,17 @@ func (s *ContractorService) CreateCT(ctID, reID, developerID, contractorID strin
 	return nil
 }
 
+// SubmitCompletion
+func (s *ContractorService) SubmitCompletion(ctID string) error {
+	contract := fabric.GetContract(CONTRACTOR_ID)
+	now := time.Now().Format(time.RFC3339)
+	_, err := contract.SubmitTransaction("SubmitCompletion", ctID, now)
+	if err != nil {
+		return fmt.Errorf("failed to submit completion: %s", fabric.ExtractErrorMessage(err))
+	}
+	return nil
+}
+
 // QueryRE 查询房产信息
 func (s *ContractorService) QueryRE(id string) (map[string]interface{}, error) {
 	contract := fabric.GetContract(CONTRACTOR_ID)

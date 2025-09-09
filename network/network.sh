@@ -1,8 +1,9 @@
 #! /bin/bash
 
 
-. scripts/utils.sh
-. scripts/envVar.sh
+
+. ./scripts/utils.sh
+. ./scripts/envVar.sh
 
 
 #! 检查环境

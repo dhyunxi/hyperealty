@@ -43,7 +43,7 @@ func (h *DeveloperHandler) CreateRE(c *gin.Context) {
 
 // QueryRE 查询房产信息
 func (h *DeveloperHandler) QueryRE(c *gin.Context) {
-	reID := c.Param("reID")
+	reID := c.Param("id")
 	realEstate, err := h.developerService.QueryRE(reID)
 	if err != nil {
 		utils.ServerError(c, "查询房产信息失败："+err.Error())

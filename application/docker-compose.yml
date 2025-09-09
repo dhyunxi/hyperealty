@@ -7,17 +7,20 @@ networks:
 
 services:
   # 后端
-  fabric-realty.server:
-    image: hyperealty.server:latest
+  hyperealty.server:
+    image: hyperealty.server:latest    # latest为开发环境，1.0.0为生产环境
     container_name: hyperealty.server
     volumes:
+      - ./server/main:/app/main              # 开发环境采用挂载
       - /usr/share/zoneinfo/Asia/Shanghai:/usr/share/zoneinfo/Asia/Shanghai # 设置时区
       - ./../network/crypto-config:/network/crypto-config
       - ./../network/data/application:/app/data
+    ports:
+      - "8888:8888"
     networks:
       - fabric_hyperealty_network
   # 前端
-  fabric-realty.web:
+  hyperealty.web:
     image: hyperealty.web:latest
     container_name: hyperealty.web
     ports:
