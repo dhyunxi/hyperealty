@@ -8,7 +8,7 @@ networks:
 services:
   # 后端
   hyperealty.server:
-    image: hyperealty.server:latest    # latest为开发环境，1.0.0为生产环境
+    image: hyperealty.server:dev       # dev为开发环境，latest为生产环境
     container_name: hyperealty.server
     volumes:
       - ./server/main:/app/main              # 开发环境采用挂载

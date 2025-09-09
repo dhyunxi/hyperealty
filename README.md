@@ -339,8 +339,8 @@ supervisor := apiGroup.Group("/supervisor")
 ---
 - 在`/hyperealty`中运行`./hyperealty.sh prep`拉取镜像
 - `cd ./network`
-- `./network.sh up`
-- 使用`./network.sh down`来关闭网络
+- `sudo ./network.sh up`
+- 使用`sudo ./network.sh down`来关闭网络
 
 
 ## 开发环境与生产环境
