@@ -337,11 +337,17 @@ supervisor := apiGroup.Group("/supervisor")
 
 # 本地部署
 ---
-- 在`/hyperealty`中运行`./hyperealty.sh prep`拉取镜像
-- `cd ./network`
-- `sudo ./network.sh up`
-- 使用`sudo ./network.sh down`来关闭网络
-
+- 在`/hyperealty`中运行
+	- `sudo ./hyperealty.sh up`：启动区块链网络和服务
+	- `sudo ./hyperealty.sh down`：关闭网络和服务
+- 更细分的
+	- 在`/hyperealty`中运行`./hyperealty.sh prep`拉取镜像
+	- `cd ./network`
+	- `sudo ./network.sh up`：启动网络
+	- `sudo ./network.sh down`：关闭网络
+	- `cd ../application`
+	- `docker compose up -d`：启动服务
+- 不加`sudo`很可能报错
 
 ## 开发环境与生产环境
 - 提供了两种server镜像
